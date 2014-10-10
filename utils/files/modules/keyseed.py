@@ -6,10 +6,10 @@ import locale
 global_last_char=""
 
 def findinfrenchlist(byte):
-	global global_last_char;
+	global global_last_char
 	found_matching_composed_char=False
 	if ( global_last_char=="\xc3" ):
-		# We have a UTF-8 char
+		# We have a "composed" char (UTF8 ?)
 		if byte=="\xa9":
 			print '''echo -ne "\\x00\\x00\\x00\\x1f\\x00\\x00\\x00\\x00" > /dev/hidg0''' # LATIN SMALL LETTER E WITH ACUTE
 			found_matching_composed_char=True
@@ -26,7 +26,7 @@ def findinfrenchlist(byte):
 			print '''echo -ne "\\x00\\x00\\x00\\x34\\x00\\x00\\x00\\x00" > /dev/hidg0''' # LATIN SMALL LETTER U WITH GRAVE
 			found_matching_composed_char=True
 	elif ( global_last_char=="\xc2" ):
-		# We have a UTF-8 char
+		# We have a "composed" char (UTF8 ?)
 		if byte=="\xb0":
 			print '''echo -ne "\\x20\\x00\\x00\\x2d\\x00\\x00\\x00\\x00" > /dev/hidg0''' # DEGREE SIGN
 			found_matching_composed_char=True
@@ -58,8 +58,8 @@ def findinfrenchlist(byte):
 		return True
 	
 	if ( byte=="\xc3" ) or ( byte=="\xc2" ):
-		# We have a UTF-8 char
-		global_last_char=byte;
+		# We have a "composed" char (UTF8 ?)
+		global_last_char=byte
 		return True
 
 	if byte=="\x21": print '''echo -ne "\\x00\\x00\\x00\\x38\\x00\\x00\\x00\\x00" > /dev/hidg0''' # !
@@ -177,7 +177,7 @@ def findinlist(byte):
 	elif byte=="\x4a": print '''echo -ne "\\x20\\x00\\x00\\x0d\\x00\\x00\\x00\\x00" > /dev/hidg0''' # J
 	elif byte=="\x4b": print '''echo -ne "\\x20\\x00\\x00\\x0e\\x00\\x00\\x00\\x00" > /dev/hidg0''' # K
 	elif byte=="\x4c": print '''echo -ne "\\x20\\x00\\x00\\x0f\\x00\\x00\\x00\\x00" > /dev/hidg0''' # L
-	elif byte=="\x4d": print '''echo -ne "\\x20\\x00\\x00\\x10\\x00\\x00\\x00\\x00" > /dev/hidg0''' # M 
+	elif byte=="\x4d": print '''echo -ne "\\x20\\x00\\x00\\x10\\x00\\x00\\x00\\x00" > /dev/hidg0''' # M
 	elif byte=="\x4e": print '''echo -ne "\\x20\\x00\\x00\\x11\\x00\\x00\\x00\\x00" > /dev/hidg0''' # N
 	elif byte=="\x4f": print '''echo -ne "\\x20\\x00\\x00\\x12\\x00\\x00\\x00\\x00" > /dev/hidg0''' # O
 	elif byte=="\x50": print '''echo -ne "\\x20\\x00\\x00\\x13\\x00\\x00\\x00\\x00" > /dev/hidg0''' # P
