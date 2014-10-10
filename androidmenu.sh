@@ -62,6 +62,8 @@ chmod +x utils/boottools/*
 
 ######### Build script start  #######
 
+printf '\033[8;33;100t' 
+
 f_check_version(){
 	# Allow user input of version number/folder creation to make set up easier
   echo "Checking for git updates in local folder..."
@@ -95,26 +97,26 @@ echo -e "		         \e[1mKALI NETHUNTER BUILDER FOR ANDROID DEVICES\e[0m"
 echo ""
 echo "	   WORK PATH: ${basedir}"
 echo ""
-echo -e "\e[31m	----------------------------   NEXUS 10    -----------MANTA -----------\e[0m"
+echo -e "\e[31m	---- NEXUS 10 (2012) - MANTA --------------------------------------------------------\e[0m"
 echo "	[1] Build for Nexus 10 Kernel with wireless USB support (Android 4.4+)"
 echo ""
-echo -e "\e[31m	----------------------------  NEXUS 7 (2012) ----GROUPER/NAKASI--------\e[0m"
+echo -e "\e[31m	---- NEXUS 7  (2012) - GROUPER/NAKASI -----------------------------------------------\e[0m"
 echo "	[2] Build for Nexus 7 (2012) with wireless USB support (Android 4.4+)"
 echo ""
-echo -e "\e[31m	----------------------------  NEXUS 7 (2013) --------DEB/FLO-----------\e[0m"
+echo -e "\e[31m	---- NEXUS 7  (2013) - DEB/FLO ------------------------------------------------------\e[0m"
 echo "	[3] Build for Nexus 7 (2013) with wireless USB support (Android 4.4+)"
 echo ""
-echo -e "\e[31m	----------------------------  NEXUS 5 --------------HAMMERHEAD---------\e[0m"
+echo -e "\e[31m	---- NEXUS 5  (2013) - HAMMERHEAD ---------------------------------------------------\e[0m"
 echo "	[4] Build for Nexus 5 with wireless USB support (Android 4.4+)"
 echo ""
-echo -e "\e[31m	----------------------------  NEXUS 4 -----------------MAKO------------\e[0m"
+echo -e "\e[31m	---- NEXUS 4  (2012) - MAKO ---------------------------------------------------------\e[0m"
 echo "	[5] Build for Nexus 4 with wireless USB support (Android 4.4+)"
 echo ""
-echo -e "\e[31m	------------------------ SAMSUNG GALAXY S5 ----G900(F/I/M/T/DEV/W8)----\e[0m"
+echo -e "\e[31m	---- SAMSUNG GALAXY S5 - G900(F/I/M/T/DEV/W8) ---------------------------------------\e[0m"
 echo "	[6] Build for Samsung Glaxy S5 G900 with wireless USB support (Android 4.4+)"
 echo ""
-echo -e "\e[31m	------------------------ SAMSUNG GALAXY S4 ----I9500----\e[0m"
-echo "	[7] Build for Samsung Glaxy S4 I9500 with wireless USB support (Android 4.4+)"
+echo -e "\e[31m	---- SAMSUNG GALAXY S4 - I9500 ------------------------------------------------------\e[0m"
+echo "	[7] Build for Samsung Glaxy S4 with wireless USB support (Android 4.4+)"
 echo ""
 if [ -f "${basedir}/flashkernel/kernel/kernel" ] && [ -d "${basedir}/flash" ]; then
 echo "	[77] Inject finished rootfs/kernel into ROM"
@@ -293,7 +295,7 @@ esac
 f_galaxyS4_I9500(){
 echo -e "\e[31m --------------     SAMSUNG GALAXY S4 ----------GT-I9500    ---------\e[0m"
 echo ""
-echo "  [1] Build All - Kali rootfs and Kernel (CM + Qualacom Devices) (Android 4.4+)"
+echo "  [1] Build All - Kali rootfs and Kernel (CM + All Qualacom Devices) (Android 4.4+)"
 echo "  [2] Build All - Kali rootfs and Kernel (CM + I9500) (Android 4.4+)"
 echo "  [3] Build Kernel (CM + Qualacom) Only"
 echo "  [4] Build Kernel (CM + I9500) Only"
@@ -375,8 +377,9 @@ extras="wpasupplicant zip macchanger dbd florence libffi-dev python-setuptools p
 mana="python-twisted python-dnspython libnl1 libnl-dev libssl-dev sslsplit python-pcapy tinyproxy isc-dhcp-server rfkill mana-toolkit"
 spiderfoot="python-lxml python-m2crypto python-netaddr python-mako"
 sdr="sox librtlsdr"
+mitmf="python-requests python-configobj python-pefile msgpack-python python-nfqueue python-imaging capstone"
 
-export packages="${arm} ${base} ${desktop} ${tools} ${wireless} ${services} ${extras} ${mana} ${spiderfoot} ${sdr}"
+export packages="${arm} ${base} ${desktop} ${tools} ${wireless} ${services} ${extras} ${mana} ${spiderfoot} ${sdr} ${mitmf}"
 export architecture="armhf"
 
 # create the rootfs - not much to modify here, except maybe the hostname.
@@ -521,8 +524,15 @@ cat << EOF > ${rootfs}/kali-$architecture/opt/honeyproxy/default.conf
 #-p port
 EOF
 
-# Install Dictionary for wifite
+# Install MITMf
+LANG=C chroot ${rootfs}/kali-$architecture pip install capstone
+cd ${rootfs}/kali-$architecture/opt/
+git clone https://github.com/byt3bl33d3r/MITMf.git
+LANG=C chroot ${rootfs}/kali-$architecture chmod 755 /opt/MITMf/install-bdfactory.sh /opt/MITMf/update.sh /opt/MITMf/mitmf.py
+LANG=C chroot ${rootfs}/kali-$architecture cd /opt/MITMf/; sh install-bdfactory.sh
+LANG=C chroot ${rootfs}/kali-$architecture cd /opt/MITMf/; sh update.sh
 
+# Install Dictionary for wifite
 mkdir -p ${rootfs}/kali-$architecture/opt/dic
 tar xvf ${basepwd}/utils/dic/89.tar.gz -C ${rootfs}/kali-$architecture/opt/dic
 
@@ -542,8 +552,23 @@ cp -rf ${basepwd}/menu/kalimenu ${rootfs}/kali-$architecture/usr/bin/kalimenu
 # cp -rf ${basepwd}/menu/firstrun kali-$architecture/usr/bin/firstrun
 sleep 5
 
+#Installs ADB and fastboot compiled for ARM
+git clone git://git.kali.org/packages/google-nexus-tools
+cp ./google-nexus-tools/bin/linux-arm-adb ${rootfs}/kali-$architecture/usr/bin/adb
+cp ./google-nexus-tools/bin/linux-arm-fastboot ${rootfs}/kali-$architecture/usr/bin/fastboot
+rm -rf ./google-nexus-tools 
+LANG=C chroot kali-$architecture chmod 755 /usr/bin/fastboot
+LANG=C chroot kali-$architecture chmod 755 /usr/bin/adb
+
+#Install HID attack script and dictionaries
+cp ${basepwd}/flash/system/xbin/hid-keyboard ${rootfs}/kali-$architecture/usr/bin/hid-keyboard
+cp ${basepwd}/utils/dic/pinlist.txt ${rootfs}/kali-$architecture/opt/dic/pinlist.txt
+cp ${basepwd}/utils/dic/wordlist.txt ${rootfs}/kali-$architecture/opt/dic/wordlist.txt
+cp ${basepwd}/utils/hid/hid-dic.sh ${rootfs}/kali-$architecture/usr/bin/hid-dic
+LANG=C chroot kali-$architecture chmod 755 /usr/bin/hid-keyboard
+LANG=C chroot kali-$architecture chmod 755 /usr/bin/hid-dic
+
 # Set permissions to executable on newly added scripts
-#LANG=C chroot kali-$architecture chmod 755 /usr/bin/kalimenu /usr/bin/firstrun 
 LANG=C chroot kali-$architecture chmod 755 /usr/bin/kalimenu 
 
 # Sets the default for hostapd.conf but not really needed as evilap will create it's own now
@@ -730,20 +755,25 @@ if [ "$buildrom" == "n" ]; then
   f_interface
 fi
 
+f_rom_build_menu(){
 prompt="Please select a file: "
 options=( $(find ${build_dir} -maxdepth 1 -iname '*.zip' | xargs -0) )
 
 PS3="$prompt "
 select zipfile in "${options[@]}" "Quit" ; do 
     if (( REPLY == 1 + ${#options[@]} )) ; then
-        exit
+        f_interface
     elif (( REPLY > 0 && REPLY <= ${#options[@]} )) ; then
         echo  "$zipfile chosen"
         break
     else
         echo "Invalid option. Try another one."
+        f_rom_build_menu
     fi
 done
+}
+
+f_rom_build_menu
 
 # Remove previous work folders, create necessary folders and unzip rom
 
